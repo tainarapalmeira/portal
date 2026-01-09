@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "portal-django-brasil"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "config"}]
+
+[tool.poetry.dependencies]
+python = "^3.14"
+django = "^6.0.1"
+python-dotenv = "^1.2.1"
+sentry-sdk = "^2.49.0"
+redis = "^7.1.0"
+django-anymail = "^14.0"
+django-redis = "^6.0.0"
+whitenoise = "^6.11.0"
+django-debug-toolbar = "^6.1.0"
+django-extensions = "^4.1"
+werkzeug = "^3.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

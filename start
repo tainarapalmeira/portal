@@ -4,6 +4,13 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+# Ensure Poetry is configured and dependencies are installed
+cd /app
+poetry config virtualenvs.create false
+if ! python -c "import django" 2>/dev/null; then
+  poetry install --no-root --no-interaction
+fi
+
 python manage.py migrate --noinput
 mkdir -p staticfiles
 python manage.py collectstatic --noinput
