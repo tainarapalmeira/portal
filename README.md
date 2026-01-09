@@ -30,24 +30,15 @@ Aqui você vai encontrar:
 
 ### Usando venv
 
-Crie e ative um ambiente virtual (opcional):
-
-```bash
-python -m venv env
-source env/bin/activate  # Linux/Mac
-env\Scripts\activate     # Windows
-```
-
 Instale as dependências:
 
 ```bash
-pip install -r requirements.txt
+poetry install
 ```
 
 ### Usando Docker
 
 ```bash
-python setup_env.py
 docker compose build
 docker compose up
 ```

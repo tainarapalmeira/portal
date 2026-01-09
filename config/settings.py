@@ -5,7 +5,8 @@ Django settings for config project.
 import logging
 from pathlib import Path
 
-import environ
+import os
+from dotenv import load_dotenv
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
@@ -14,20 +15,20 @@ from sentry_sdk.integrations.redis import RedisIntegration
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-env = environ.Env()
-environ.Env.read_env(BASE_DIR / ".env")
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool("DEBUG", False)
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
 
 # Application definition
@@ -156,7 +157,7 @@ CSRF_COOKIE_HTTPONLY = True
 # https://docs.djangoproject.com/en/dev/ref/settings/#x-frame-options
 X_FRAME_OPTIONS = "DENY"
 
-EMAIL_BACKEND = env(
+EMAIL_BACKEND = os.getenv(
     "DJANGO_EMAIL_BACKEND",
     default="django.core.mail.backends.smtp.EmailBackend",
 )
@@ -176,7 +177,7 @@ ADMINS = [("""Filipe Martins""", "filipe@fmartns.dev")]
 # https://docs.djangoproject.com/en/dev/ref/settings/#managers
 MANAGERS = ADMINS
 
-if env.bool("LOCAL", False):
+if os.getenv("LOCAL", False):
     # https://docs.djangoproject.com/en/dev/ref/settings/#caches
     CACHES = {
         "default": {
@@ -186,7 +187,7 @@ if env.bool("LOCAL", False):
     }
 
     # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
-    EMAIL_BACKEND = env(
+    EMAIL_BACKEND = os.getenv(
         "DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
     )
 
@@ -201,13 +202,16 @@ if env.bool("LOCAL", False):
 
     # https://django-debug-toolbar.readthedocs.io/en/latest/configuration.html#debug-toolbar-config
     DEBUG_TOOLBAR_CONFIG = {
-        "DISABLE_PANELS": ["debug_toolbar.panels.redirects.RedirectsPanel"],
+        "DISABLE_PANELS": [
+            "debug_toolbar.panels.redirects.RedirectsPanel",
+            "debug_toolbar.panels.profiling.ProfilingPanel",
+        ],
         "SHOW_TEMPLATE_CONTEXT": True,
     }
 
     # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#internal-ips
     INTERNAL_IPS = ["127.0.0.1", "10.0.2.2"]
-    if env.bool("USE_DOCKER", False):
+    if os.getenv("USE_DOCKER", False):
         import socket
 
         hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
@@ -226,7 +230,7 @@ else:
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": env("REDIS_URL"),
+            "LOCATION": os.getenv("REDIS_URL"),
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
                 # https://github.com/jazzband/django-redis#memcached-exceptions-behavior
@@ -239,7 +243,7 @@ else:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
     # https://docs.djangoproject.com/en/dev/ref/settings/#secure-ssl-redirect
-    SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
+    SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", True)
 
     # https://docs.djangoproject.com/en/dev/ref/settings/#session-cookie-secure
     SESSION_COOKIE_SECURE = True
@@ -253,15 +257,15 @@ else:
     SECURE_HSTS_SECONDS = 60
 
     # https://docs.djangoproject.com/en/dev/ref/settings/#secure-hsts-include-subdomains
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool(
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv(
         "SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True
     )
 
     # https://docs.djangoproject.com/en/dev/ref/settings/#secure-hsts-preload
-    SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=True)
+    SECURE_HSTS_PRELOAD = os.getenv("SECURE_HSTS_PRELOAD", True)
 
     # https://docs.djangoproject.com/en/dev/ref/middleware/#x-content-type-options-nosniff
-    SECURE_CONTENT_TYPE_NOSNIFF = env.bool("SECURE_CONTENT_TYPE_NOSNIFF", default=True)
+    SECURE_CONTENT_TYPE_NOSNIFF = os.getenv("SECURE_CONTENT_TYPE_NOSNIFF", True)
 
     STORAGES = {
         "default": {
@@ -273,16 +277,16 @@ else:
     }
 
     # https://docs.djangoproject.com/en/dev/ref/settings/#default-from-email
-    DEFAULT_FROM_EMAIL = env(
+    DEFAULT_FROM_EMAIL = os.getenv(
         "DEFAULT_FROM_EMAIL",
         default="DjangoCon 2025 <noreply@2025.djangocon.eu>",
     )
 
     # https://docs.djangoproject.com/en/dev/ref/settings/#server-email
-    SERVER_EMAIL = env("SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
+    SERVER_EMAIL = os.getenv("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
 
     # https://docs.djangoproject.com/en/dev/ref/settings/#email-subject-prefix
-    EMAIL_SUBJECT_PREFIX = env(
+    EMAIL_SUBJECT_PREFIX = os.getenv(
         "EMAIL_SUBJECT_PREFIX",
         default="[Django Brasil]",
     )
@@ -290,7 +294,7 @@ else:
     # ADMIN
     # ------------------------------------------------------------------------------
     # Django Admin URL regex.
-    ADMIN_URL = env("ADMIN_URL")
+    ADMIN_URL = os.getenv("ADMIN_URL", "admin/")
 
     # Anymail
     # ------------------------------------------------------------------------------
@@ -302,9 +306,9 @@ else:
     # https://anymail.readthedocs.io/en/stable/esps/mailgun/
     EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
     ANYMAIL = {
-        "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
-        "MAILGUN_SENDER_DOMAIN": env("MAILGUN_DOMAIN"),
-        "MAILGUN_API_URL": env("MAILGUN_API_URL", default="https://api.mailgun.net/v3"),
+        "MAILGUN_API_KEY": os.getenv("MAILGUN_API_KEY"),
+        "MAILGUN_SENDER_DOMAIN": os.getenv("MAILGUN_DOMAIN"),
+        "MAILGUN_API_URL": os.getenv("MAILGUN_API_URL", "https://api.mailgun.net/v3"),
     }
 
     # https://docs.djangoproject.com/en/dev/ref/settings/#logging
@@ -349,8 +353,8 @@ else:
 
     # Sentry
     # ------------------------------------------------------------------------------
-    SENTRY_DSN = env("SENTRY_DSN")
-    SENTRY_LOG_LEVEL = env.int("DJANGO_SENTRY_LOG_LEVEL", logging.INFO)
+    SENTRY_DSN = os.getenv("SENTRY_DSN")
+    SENTRY_LOG_LEVEL = os.getenv("DJANGO_SENTRY_LOG_LEVEL", logging.INFO)
 
     sentry_logging = LoggingIntegration(
         level=SENTRY_LOG_LEVEL,  # Capture info and above as breadcrumbs
@@ -364,6 +368,6 @@ else:
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         integrations=integrations,
-        environment=env("SENTRY_ENVIRONMENT", default="production"),
-        traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
+        environment=os.getenv("SENTRY_ENVIRONMENT", "production"),
+        traces_sample_rate=os.getenv("SENTRY_TRACES_SAMPLE_RATE", 0.0),
     )
